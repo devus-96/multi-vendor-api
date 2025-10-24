@@ -4,6 +4,8 @@ use Illuminate\Support\Str;
 
 return [
 
+    'secret' => env('JWT_SECRET_KEY'),
+
     /*
     |--------------------------------------------------------------------------
     | Default Session Driver

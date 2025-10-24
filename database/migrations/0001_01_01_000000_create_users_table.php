@@ -15,10 +15,16 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('phone_number');
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('profile_photo_url')->nullable();
+            $table->boolean('is_2fa_enabled')->default(false);
+            $table->string('auth_provider')->nullable();
+            $table->string("provider_id")->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes('deleted_at', precision: 0);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -28,12 +34,11 @@ return new class extends Migration
         });
 
         Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('token');
+            $table->dateTime('expires_at');
+            $table->timestamps();
         });
     }
 
