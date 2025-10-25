@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Services\JWTService;
 use Illuminate\Support\Facades\Auth;
+use Firebase\JWT\ExpiredException;
 
 class VerifySessionToken
 {
@@ -22,13 +23,21 @@ class VerifySessionToken
             $user = JWTService::verify($request);
 
             if (!$user) {
-                return response()->json(['error' => 'Invalid token'], 401);
+                Auth::logout();
+                return response()->json(['error' => 'something went wrong'], 500);
             }
-
-            // Si tout est bon, on connecte l'utilisateur
-            Auth::login($user);
         } catch (ExpiredException $e) {
-              return response()->json(['error' => 'Invalid token'], 401);
+              return response()->json(['error' => 'Expired token'], 401);
+        }catch (\Firebase\JWT\SignatureInvalidException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Signature du token invalide'
+            ], 401);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Token invalide'
+            ], 401);
         }
         return $next($request);
     }

@@ -4,18 +4,16 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Session;
+use App\Models\RefreshToken;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Inertia\Response;
-use Illuminate\Support\Facades\DB;
 use App\Services\JWTService;
-use App\Services\RefreshToken;
+use App\Services\RefreshTokenService;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cookie;
 
 class RegisteredUserController extends Controller
 {
@@ -50,24 +48,39 @@ class RegisteredUserController extends Controller
 
         $token = JWTService::generate([
             "id" => $user->id,
-        ], 3600 / 2);
+        ], 60);
 
-        $opaque_token = RefreshToken::generateOpaqueToken();
+        [$secret, $tokenHash] = RefreshTokenService::generateOpaqueToken();
 
-        // créer une ligne de session en BD et récupérer son id
-        $session = Session::create([
+         // créer une ligne de session en BD et récupérer son id
+        $refresh_token = RefreshToken::create([
             'user_id' => $user->id,
-            'token' => $opaque_token,
-            'expires_at' => now()->addDays(7),
+            'token' => $tokenHash,
+            "expired_at" => now()->addDays(30)
         ]);
+
+
+
+        $refreshCookie = cookie(
+            'refresh_token',
+            $refresh_token->id . '.' . $secret,
+            60 * 24 * 30, // Durée de 30 jours
+            '/',
+            null,
+            true, // Secure (nécessite HTTPS)
+            true  // HttpOnly (empêche JS d'y accéder)
+        );
+
+        Auth::login($user, true);
+
+        event(new Registered($user));
 
         return response()->json([
             'statut' => 200,
             'user' => $user,
             'token' => $token,
-            'opaque_token' => $opaque_token,
             'message' => 'User created successfully!!'
-        ]);
+        ])->withCookie($refreshCookie);
     }
 }
 

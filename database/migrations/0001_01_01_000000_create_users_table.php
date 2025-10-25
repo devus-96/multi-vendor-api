@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('auth_provider')->nullable();
             $table->string("provider_id")->nullable();
             $table->rememberToken();
-            $table->timestamps();
             $table->softDeletes('deleted_at', precision: 0);
+            $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -34,11 +34,14 @@ return new class extends Migration
         });
 
         Schema::create('sessions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('token');
-            $table->dateTime('expires_at');
-            $table->timestamps();
+            $table->string('id')->unique();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+
+            // 💡 La colonne last_activity doit être INTEGER par défaut (timestamp)
+            $table->integer('last_activity')->index();
         });
     }
 

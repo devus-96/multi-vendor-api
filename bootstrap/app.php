@@ -17,6 +17,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'session' => VerifySessionToken::class,
         ]);
+
+        $middleware->encryptCookies(except: [
+            'refresh_token',
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+        '*'  // Désactive CSRF pour toutes les routes
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

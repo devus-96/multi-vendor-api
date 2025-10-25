@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
-class RefreshToken {
+class RefreshTokenService {
     static function generateOpaqueToken()
     {
         // secret aléatoire que l'on retourne au client
@@ -14,7 +14,7 @@ class RefreshToken {
         // stocker un hash du secret (comme mot de passe)
         $tokenHash = Hash::make($secret);
 
-        return $tokenHash;
+        return [$secret, $tokenHash];
     }
 }
 

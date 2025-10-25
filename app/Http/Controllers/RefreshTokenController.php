@@ -10,24 +10,19 @@ use Illuminate\Support\Facades\Auth;
 class RefreshTokenController extends Controller
 {
     function __invoke (Request $request) {
-        $user = Auth::user();
+        $user =  JWTService::refresh($request);
 
-        $RToken =  JWTService::refresh();
-
-        if (!$RToken) {
+        if (!$user) {
             return response()->json(['error' => 'Invalid refresh token'], 401);
         }
 
         $token = JWTService::generate([
-            "id" => $user->id,
+            "id" => $user,
         ], 3600 / 2);
 
          return response()->json([
             'statut' => 200,
-            'user' => $user,
             'token' => $token,
-            'opaque_token' => $RToken,
-            'message' => 'User created successfully!!'
         ]);
     }
 }

@@ -4,10 +4,14 @@ namespace App\Services;
 
 
 use App\Models\User;
+use App\Models\RefreshToken;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
+use Illuminate\Support\Facades\Auth;
 
 class JWTService
 {
@@ -54,6 +58,7 @@ class JWTService
     }
 
     static function refresh ($request) {
+        $user = Auth::user();
         $token = $request->bearerToken();
 
         if (!$token || !str_contains($token, '.')) {
@@ -62,24 +67,28 @@ class JWTService
 
         [$id, $secret] = explode('.', $token, 2);
 
-        $session = Session::find($id);
+        $refresh_token = RefreshToken::find($id);
 
-        if (!$session) {
+        if (!$refresh_token) {
             return false;
         }
 
          // vérifier l'expiration
-        if ($session->expires_at->isPast()) {
-            $session->delete();
+        if (Carbon::parse($refresh_token->expired_at)->isPast()) {
+            $refresh_token->delete();
             return false;
         }
 
+        //$user = $refreshToken->user;
+
         // comparer le secret fourni et le hash stocké
-        if (!Hash::check($secret, $session->token_hash)) {
+        if (!Hash::check($secret, $refresh_token->token)) {
            return false;
         }
 
-       return $token;
+        $userId = $refresh_token->user_id;
+
+        return $userId;
     }
 
     /**
@@ -88,7 +97,9 @@ class JWTService
     static function verify($request)
     {
         $key = config('session.secret');
+
         $bearerHeader = $request->header("Authorization");
+
         if ($bearerHeader == null) {
             return false;
         }
@@ -105,25 +116,17 @@ class JWTService
 
         $bearerToken = $bearer[1];
 
-        try {
-            $decoded = JWT::decode($bearerToken, new Key($key, "HS256"));
+        $decoded = JWT::decode($bearerToken, new Key($key, "HS256"));
 
-            $data = $decoded->data;
+        $data = $decoded->data;
 
-            $user = User::select("id")
-                ->where("id", "=", $data->id)
-                ->first();
+        $user = User::find($data->id);
 
-            if ($user == null) {
-                return false;
-            } else {
-                $request->query->set("user_id", $user->id);
-                return $user;
-            }
-        }catch(Exception $e) {
+        if ($user == null) {
             return false;
-        }catch(ExpiredException $e){
-            return $e;
+        } else {
+           $request->merge(['user_id' => $user->id]);
+            return true;
         }
 
     }
