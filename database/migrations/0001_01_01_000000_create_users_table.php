@@ -17,11 +17,12 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('phone_number');
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('profile_photo_url')->nullable();
             $table->boolean('is_2fa_enabled')->default(false);
             $table->string('auth_provider')->nullable();
             $table->string("provider_id")->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('verified_at')->nullable(); // admin or system identity verification
             $table->rememberToken();
             $table->softDeletes('deleted_at', precision: 0);
             $table->timestamps();

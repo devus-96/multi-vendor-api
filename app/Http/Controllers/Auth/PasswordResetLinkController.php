@@ -3,11 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class PasswordResetLinkController extends Controller
 {
@@ -16,16 +13,20 @@ class PasswordResetLinkController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function __invoke(Request $request): RedirectResponse
+    public function __invoke(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
         ]);
 
+        dd('dsads');
+        /*
+
+
         Password::sendResetLink(
             $request->only('email')
         );
 
-        return back()->with('status', __('A reset link will be sent if the account exists.'));
+        return back()->with('status', __('A reset link will be sent if the account exists.'));*/
     }
 }

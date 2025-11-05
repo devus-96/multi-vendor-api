@@ -11,3 +11,4 @@ Route::get('/user', function (Request $request) {
             'message' => 'User created successfully!!'
     ]);
 })->middleware(['session']);
+
