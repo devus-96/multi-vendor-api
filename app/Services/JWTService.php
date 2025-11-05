@@ -125,7 +125,8 @@ class JWTService
         if ($user == null) {
             return false;
         } else {
-           $request->merge(['user_id' => $user->id]);
+           // Attacher l'utilisateur à la requête
+            $request->setUserResolver(fn() => $user);
             return true;
         }
 

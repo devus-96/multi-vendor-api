@@ -19,6 +19,12 @@ class VerifySessionToken
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return response()->json(['message' => 'Token missing'], 401);
+        }
+
         try {
             $user = JWTService::verify($request);
 
@@ -26,6 +32,7 @@ class VerifySessionToken
                 Auth::logout();
                 return response()->json(['error' => 'something went wrong'], 500);
             }
+
         } catch (ExpiredException $e) {
               return response()->json(['error' => 'Expired token'], 401);
         }catch (\Firebase\JWT\SignatureInvalidException $e) {

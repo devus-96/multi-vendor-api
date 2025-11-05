@@ -48,7 +48,7 @@ class RegisteredUserController extends Controller
 
         $token = JWTService::generate([
             "id" => $user->id,
-        ], 60);
+        ], 60*60);
 
         [$secret, $tokenHash] = RefreshTokenService::generateOpaqueToken();
 

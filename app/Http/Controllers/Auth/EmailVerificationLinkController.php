@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\JWTService;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AccountCreated;
 
 class EmailVerificationLinkController extends Controller
 {

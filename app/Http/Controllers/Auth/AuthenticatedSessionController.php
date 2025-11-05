@@ -34,7 +34,10 @@ class AuthenticatedSessionController extends Controller
         $user = User::where("email", $request->input("email"))->first();
 
         // 2. Générer le JWT
-        $token = JWTService::generate(['id' => $user->id], 60*10);
+        $token = JWTService::generate(['id' => $user->id], 60*60);
+
+        // Generate token
+        $user->token = $user->createToken('api-token')->plainTextToken;
 
         // 3. Générer le refresh token
         [$secret, $tokenHash] = RefreshToken::generateOpaqueToken();
