@@ -7,13 +7,13 @@ use App\Models\User;
 use App\Models\RefreshToken;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use App\Services\JWTService;
 use App\Services\RefreshTokenService;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Cookie;
+use Illuminate\Cookie\CookieJar;
+use Illuminate\Validation\Factory;
+use Illuminate\Contracts\Routing\ResponseFactory;
 
 class RegisteredUserController extends Controller
 {
@@ -22,24 +22,25 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, CookieJar $cookie, Validator $validator, AuthManager $auth, ResponseFactory $response): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $validator = $validator->make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'phone_number' => 'required|string|unique:'.User::class
+            'phone_number' => 'required|string|unique:'.User::class,
+            'image.*'          => 'nullable|mimes:bmp,jpeg,jpg,png,webp',
         ]);
 
 
          if ($validator->fails()) {
-            return response()->json([
+            return $response->json([
                 'statut' => 'error',
                 'message' => $validator->errors(),
             ], 422);
         }
 
-        $user = User::create([
+        $user = User::query()->create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -53,7 +54,7 @@ class RegisteredUserController extends Controller
         [$secret, $tokenHash] = RefreshTokenService::generateOpaqueToken();
 
          // créer une ligne de session en BD et récupérer son id
-        $refresh_token = RefreshToken::create([
+        $refresh_token = RefreshToken::query()->create([
             'user_id' => $user->id,
             'token' => $tokenHash,
             "expired_at" => now()->addDays(30)
@@ -61,7 +62,7 @@ class RegisteredUserController extends Controller
 
 
 
-        $refreshCookie = cookie(
+        $refreshCookie = $cookie->make(
             'refresh_token',
             $refresh_token->id . '.' . $secret,
             60 * 24 * 30, // Durée de 30 jours
@@ -71,11 +72,11 @@ class RegisteredUserController extends Controller
             true  // HttpOnly (empêche JS d'y accéder)
         );
 
-        Auth::login($user, true);
+        $auth->login($user, true);
 
         event(new Registered($user));
 
-        return response()->json([
+        return $response->json([
             'statut' => 200,
             'user' => $user,
             'token' => $token,

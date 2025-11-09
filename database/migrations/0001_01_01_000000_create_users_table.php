@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('role')->enum(['client', 'seller']);
             $table->string('password');
             $table->string('phone_number');
             $table->string('profile_photo_url')->nullable();
