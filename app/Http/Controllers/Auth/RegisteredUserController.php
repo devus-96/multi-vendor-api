@@ -47,6 +47,12 @@ class RegisteredUserController extends Controller
             'phone_number' => $request->phone_number
         ]);
 
+        if (request()->hasFile('image')) {
+            $user->image = current(request()->file('image'))->store('user/'.$user->id);
+
+            $user->save();
+        }
+
         $token = JWTService::generate([
             "id" => $user->id,
         ], 60*60);
