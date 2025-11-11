@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('street');
             $table->string('city');
             $table->string('country');
-            $table->string('longitude');
-            $table->string('latitude');
+            $table->decimal('latitude', 10, 5)->nullable();
+            $table->decimal('longitude', 10, 5)->nullable();
 
             $table->foreign('store_id')->references('id')->on('store')->onDelete('cascade');
             $table->foreign('customer_id')->references('id')->on('users')->onDelete('cascade');

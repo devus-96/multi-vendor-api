@@ -20,9 +20,9 @@ class Store extends Model
         'email'
     ];
 
-    public function address(): BelongsToMany
+    public function address(): HasMany
     {
-        return $this->belongsToMany(Address::class);
+        return $this->hasMany(Address::class);
     }
 
 }
